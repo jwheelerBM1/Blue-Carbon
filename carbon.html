@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Carbon Certification & BCP Architecture - The Bahamas</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Chosen Palette: Ocean Blues & Greens (Slate, Teal, Cyan) to reflect the marine/tech nature of the project. -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0f172a',    // slate-900
+                            primary: '#0369a1', // sky-700
+                            light: '#e0f2fe',   // sky-100
+                            accent: '#0d9488',  // teal-600
+                            surface: '#ffffff',
+                            bg: '#f8fafc'       // slate-50
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Chart Container Requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        
+        /* Custom Scrollbar for inner containers */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Interactive Pipeline CSS */
+        .pipeline-step {
+            transition: all 0.3s ease;
+        }
+        .pipeline-step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .active-step {
+            border-color: #0369a1;
+            background-color: #e0f2fe;
+        }
+    </style>
+</head>
+<body class="bg-brand-bg text-slate-800 font-sans antialiased">
+
+    <!-- Application Structure Plan: 
+         1. Header/Hero: Establishes context (Bahamas, BCP, Certification).
+         2. Executive Summary & Context: High-level overview of the goal (Verra VM0033 certification) and why Blue Carbon matters, using a chart to show comparative density.
+         3. Data Architecture (The "What"): Grid layout detailing the 3 main data pillars: Satellite, Sensors, Manual.
+         4. BCP Integration (The "How"): Interactive pipeline demonstrating how Bluemvmt ingests, processes (via K8s sidecars), and outputs data.
+         5. AI/ML Algorithms (The "Brain"): Interactive master-detail view answering the user's specific questions on models, Google Model Garden, and licensing.
+         6. Certification Pathway: Checklist/Summary of rigorous standards (Tier 3, VCS).
+         This structure logically flows from data collection to platform ingestion, to algorithmic analysis, and finally to the business goal (certification). -->
+
+    <!-- Visualization & Content Choices: 
+         - Bar Chart (Chart.js): Compares Carbon Sequestration Density. Goal: Inform on the value of Bahamian coastal ecosystems.
+         - Interactive Pipeline (HTML/CSS/JS): Shows the flow of data into BCP. Goal: Explain the technical integration (Playbooks, Sidecars) from the POG doc without complex architecture SVGs.
+         - Master-Detail UI (HTML/JS): For ML Models. Goal: Organize complex technical answers (algorithms, licensing, Model Garden) into an easily explorable format.
+         - Doughnut Chart (Chart.js): Displays hypothetical breakdown of uncertainty reduction via ML. Goal: Justify the use of AI in Tier 3 reporting. -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. Relying strictly on Tailwind, Chart.js (Canvas), Unicode, and CSS shapes. -->
+
+    <!-- Navigation -->
+    <nav class="bg-brand-dark text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <!-- <span class="text-2xl">🌊</span>
+                    <span class="font-bold text-xl tracking-tight">Blue Carbon Cert-UI <span class="text-brand-accent text-sm ml-2">Powered by BCP</span></span> -->
+                    <image src="./BMLogoWhite.png" alt="carbon-logo" class="h-14" />
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-medium">Overview</a>
+                        <a href="#data-ingestion" class="hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-medium">Data Capture</a>
+                        <a href="#bcp-platform" class="hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-medium">BCP Workflows</a>
+                        <a href="#ai-models" class="hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-medium">ML & Algorithms</a>
+                        <a href="#certification" class="hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-medium">Certification</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="bg-white border-b border-slate-200 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 class="text-4xl font-extrabold text-brand-dark mb-4">Architecting Blue Carbon Certification in The Bahamas</h1>
+            <p class="text-xl text-slate-600 max-w-3xl">
+                A strategic overview of data capture methodologies, Machine Learning requirements, and Bluemvmt Cloud Platform (BCP) integrations necessary to achieve Verified Carbon Standard (VCS) certification for Bahamian coastal ecosystems.
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+
+        <!-- 1. Overview & Context -->
+        <section id="overview" class="scroll-mt-20">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">1. The Blue Carbon Imperative</h2>
+                <p class="text-slate-600 mt-2">Understanding the foundational baseline for carbon crediting in coastal habitats.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-semibold mb-4 text-brand-primary">Why The Bahamas?</h3>
+                    <p class="text-slate-700 mb-4">
+                        The Bahamas possesses vast extents of mangroves and seagrass beds. According to scientific best practices, to generate high-quality, tradable carbon credits under frameworks like <strong>Verra's VCS (VM0033)</strong>, projects must move beyond "Tier 1" global default estimates to <strong>"Tier 3" site-specific, highly rigorous measurements</strong>.
+                    </p>
+                    <p class="text-slate-700 mb-4">
+                        This requires continuous monitoring of baselines, additionality (the carbon saved/sequestered *because* of the project), and leakage. The chart compares the massive carbon density of coastal systems versus terrestrial forests, underscoring the high value of accurate measurement.
+                    </p>
+                    <div class="bg-brand-light p-4 rounded-lg border border-sky-200 mt-6">
+                        <strong class="text-brand-dark">Goal:</strong> Produce verifiable, immutable data artifacts proving sequestration to independent validation bodies (VVBs).
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-semibold text-center mb-2">Carbon Storage Density (Mg C / Hectare)</h3>
+                    <div class="chart-container">
+                        <canvas id="carbonDensityChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-slate-500 mt-2">Note: Conceptual data representing global averages. Blue Carbon systems store majority of C in soils.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Data Capture (The What) -->
+        <section id="data-ingestion" class="scroll-mt-20">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">2. Tri-Modal Data Capture Strategy</h2>
+                <p class="text-slate-600 mt-2">To achieve Tier 3 precision, the initiative must fuse three distinct data streams.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Satellite -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                    <div class="text-4xl mb-4">🛰️</div>
+                    <h3 class="text-xl font-bold text-brand-dark mb-2">Satellite & Remote Sensing</h3>
+                    <p class="text-slate-600 text-sm mb-4 flex-grow">
+                        Macro-level monitoring for spatial extent, land-cover changes, and large-scale biomass estimation.
+                    </p>
+                    <ul class="text-sm text-slate-700 space-y-2 mb-4">
+                        <li><strong>Optical/Multispectral:</strong> Sentinel-2, Landsat (NDVI, canopy health, water quality).</li>
+                        <li><strong>SAR (Synthetic Aperture Radar):</strong> Sentinel-1 (Biomass density, structural mapping regardless of cloud cover).</li>
+                        <li><strong>LiDAR:</strong> Drone/Airborne (High-res canopy height models).</li>
+                    </ul>
+                    <div class="mt-auto pt-4 border-t border-slate-100">
+                        <span class="text-xs font-semibold text-brand-primary uppercase">Ingestion Frequency:</span>
+                        <span class="text-xs text-slate-600 float-right">Weekly / Monthly</span>
+                    </div>
+                </div>
+
+                <!-- IoT Sensors -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                    <div class="text-4xl mb-4">🌊</div>
+                    <h3 class="text-xl font-bold text-brand-dark mb-2">IoT Marine Sensors</h3>
+                    <p class="text-slate-600 text-sm mb-4 flex-grow">
+                        Micro-level, real-time telemetry to monitor environmental health, water quality, and carbon fluxes.
+                    </p>
+                    <ul class="text-sm text-slate-700 space-y-2 mb-4">
+                        <li><strong>Biogeochemical:</strong> Dissolved Oxygen, pCO2, Salinity, pH sensors.</li>
+                        <li><strong>Hydrodynamic:</strong> Tide gauges, water level (sea-level rise impact on baselines).</li>
+                        <li><strong>Eddy Covariance Towers:</strong> Direct measurement of atmospheric CO2 flux over canopies.</li>
+                    </ul>
+                    <div class="mt-auto pt-4 border-t border-slate-100">
+                        <span class="text-xs font-semibold text-brand-primary uppercase">Ingestion Frequency:</span>
+                        <span class="text-xs text-slate-600 float-right">Real-time / Hourly</span>
+                    </div>
+                </div>
+
+                <!-- Manual Sampling -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                    <div class="text-4xl mb-4">🧪</div>
+                    <h3 class="text-xl font-bold text-brand-dark mb-2">Manual Ground-Truthing</h3>
+                    <p class="text-slate-600 text-sm mb-4 flex-grow">
+                        Crucial for model calibration. ML models cannot predict soil carbon without physical truth data.
+                    </p>
+                    <ul class="text-sm text-slate-700 space-y-2 mb-4">
+                        <li><strong>Soil Cores:</strong> Deep soil sampling to determine organic carbon percentage and bulk density.</li>
+                        <li><strong>Allometry:</strong> Measuring Diameter at Breast Height (DBH) and tree height for above-ground biomass.</li>
+                        <li><strong>Lab Analysis:</strong> Validating sensor accuracy.</li>
+                    </ul>
+                    <div class="mt-auto pt-4 border-t border-slate-100">
+                        <span class="text-xs font-semibold text-brand-primary uppercase">Ingestion Frequency:</span>
+                        <span class="text-xs text-slate-600 float-right">Annual / Campaign-based</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. BCP Platform Integration -->
+        <section id="bcp-platform" class="scroll-mt-20 bg-slate-100 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 border-y border-slate-200">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-brand-dark">3. Bluemvmt Cloud Platform (BCP) Ingestion</h2>
+                <p class="text-slate-600 mt-2">How data flows into BCP and is processed into certifiable artifacts using Playbooks and Kubernetes Sidecars.</p>
+            </div>
+
+            <!-- Interactive Pipeline -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 relative">
+                    
+                    <!-- Line connecting steps (Desktop) -->
+                    <div class="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-slate-200 -z-10 transform -translate-y-1/2"></div>
+
+                    <!-- Step 1 -->
+                    <div class="pipeline-step bg-white border-2 border-slate-200 rounded-lg p-4 w-full md:w-1/4 z-10 cursor-pointer" onclick="updatePipeline('ingest', this)" id="step-ingest">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-slate-800">1. Ingestion</span>
+                            <span class="text-xl">📡</span>
+                        </div>
+                        <p class="text-xs text-slate-500">API/MQTT Data Cards</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="pipeline-step bg-white border-2 border-slate-200 rounded-lg p-4 w-full md:w-1/4 z-10 cursor-pointer" onclick="updatePipeline('sidecar', this)" id="step-sidecar">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-slate-800">2. AI Processing</span>
+                            <span class="text-xl">⚙️</span>
+                        </div>
+                        <p class="text-xs text-slate-500">K8s Custom Sidecars</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="pipeline-step bg-white border-2 border-slate-200 rounded-lg p-4 w-full md:w-1/4 z-10 cursor-pointer" onclick="updatePipeline('playbook', this)" id="step-playbook">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-slate-800">3. Playbooks</span>
+                            <span class="text-xl">📋</span>
+                        </div>
+                        <p class="text-xs text-slate-500">Workflow Automation</p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="pipeline-step bg-white border-2 border-slate-200 rounded-lg p-4 w-full md:w-1/4 z-10 cursor-pointer" onclick="updatePipeline('cert', this)" id="step-cert">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-slate-800">4. Certification</span>
+                            <span class="text-xl">📜</span>
+                        </div>
+                        <p class="text-xs text-slate-500">Immutable Reports</p>
+                    </div>
+                </div>
+
+                <!-- Details Panel -->
+                <div class="mt-8 bg-brand-bg p-6 rounded-lg border border-slate-200 min-h-[200px]" id="pipeline-details">
+                    <h4 class="text-xl font-bold text-brand-primary mb-2">Interactive BCP Pipeline</h4>
+                    <p class="text-slate-700">Click on a stage in the pipeline above to see how the Bluemvmt Cloud Platform specifically handles the data flow for the Bahamas Blue Carbon initiative.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. AI & ML Algorithms -->
+        <section id="ai-models" class="scroll-mt-20">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">4. ML Models, Algorithms & Sourcing</h2>
+                <p class="text-slate-600 mt-2">Specific algorithmic approaches required, their availability (e.g., Google Model Garden), and licensing implications.</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Sidebar Navigation for Models -->
+                <div class="w-full lg:w-1/3 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                    <div class="bg-slate-50 p-4 border-b border-slate-200 font-bold text-slate-700">
+                        Required ML Objectives
+                    </div>
+                    <div class="flex-grow custom-scroll overflow-y-auto">
+                        <button onclick="updateModelDetails('spatial')" id="btn-spatial" class="w-full text-left p-4 border-b border-slate-100 hover:bg-sky-50 focus:outline-none transition-colors bg-sky-50 border-l-4 border-l-brand-primary">
+                            <div class="font-semibold text-brand-dark">1. Spatial Extent & Land Cover</div>
+                            <div class="text-xs text-slate-500">Computer Vision (Satellite)</div>
+                        </button>
+                        <button onclick="updateModelDetails('biomass')" id="btn-biomass" class="w-full text-left p-4 border-b border-slate-100 hover:bg-sky-50 focus:outline-none transition-colors border-l-4 border-l-transparent">
+                            <div class="font-semibold text-brand-dark">2. Biomass/Carbon Estimation</div>
+                            <div class="text-xs text-slate-500">Regression / Ensembles</div>
+                        </button>
+                        <button onclick="updateModelDetails('anomaly')" id="btn-anomaly" class="w-full text-left p-4 border-b border-slate-100 hover:bg-sky-50 focus:outline-none transition-colors border-l-4 border-l-transparent">
+                            <div class="font-semibold text-brand-dark">3. Sensor Anomaly Detection</div>
+                            <div class="text-xs text-slate-500">Time-Series Analysis</div>
+                        </button>
+                        <button onclick="updateModelDetails('garden')" id="btn-garden" class="w-full text-left p-4 hover:bg-sky-50 focus:outline-none transition-colors border-l-4 border-l-transparent">
+                            <div class="font-semibold text-brand-dark">🌍 Google Model Garden / GCP</div>
+                            <div class="text-xs text-slate-500">Licensing & Availability</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Detail Content -->
+                <div class="w-full lg:w-2/3 bg-white border border-slate-200 rounded-xl shadow-sm p-6" id="model-details-content">
+                    <!-- Default populated by JS (Spatial) -->
+                </div>
+            </div>
+            
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-semibold text-lg mb-4">Impact of ML on Uncertainty (Verra VM0033)</h3>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="uncertaintyChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center">
+                    <h3 class="font-semibold text-lg mb-2">Why BCP Sidecars for ML?</h3>
+                    <p class="text-slate-600 text-sm mb-4">
+                        As noted in the POG framework, BCP utilizes <strong>pre-integrated Kubernetes sidecars</strong>. This architecture is vital for ML in carbon crediting:
+                    </p>
+                    <ul class="list-disc pl-5 text-sm text-slate-700 space-y-2">
+                        <li><strong>Isolation:</strong> Heavy GPU workloads (like running U-Net on satellite imagery) don't crash core data ingestion.</li>
+                        <li><strong>Custom Models:</strong> Organizations can deploy proprietary Bahamian-trained models directly alongside platform data.</li>
+                        <li><strong>Scalability:</strong> Auto-scales compute resources during massive monthly satellite ingestion events.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 5. Certification Pathway -->
+        <section id="certification" class="scroll-mt-20">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">5. Certification Output & Validation</h2>
+                <p class="text-slate-600 mt-2">What the BCP must output for a Validation/Verification Body (VVB) to issue credits.</p>
+            </div>
+
+            <div class="bg-brand-dark text-white rounded-xl shadow-lg p-8 relative overflow-hidden">
+                <!-- Decorator shape -->
+                <div class="absolute top-0 right-0 -mt-10 -mr-10 text-9xl opacity-10">📜</div>
+                
+                <h3 class="text-2xl font-bold mb-6 text-brand-light border-b border-slate-700 pb-2">Verra VM0033 Compliance Checklist</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <ul class="space-y-4">
+                            <li class="flex items-start">
+                                <span class="text-brand-accent mr-3">✔</span>
+                                <div>
+                                    <strong class="block text-brand-light">Baseline Scenario Quantification</strong>
+                                    <span class="text-sm text-slate-300">BCP Playbooks generate historical land-use models and expected baseline emissions without the project.</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-brand-accent mr-3">✔</span>
+                                <div>
+                                    <strong class="block text-brand-light">Tier 3 Site-Specific Data</strong>
+                                    <span class="text-sm text-slate-300">Integration of local soil core data (via manual entry Data Cards) + tuned ML models, rejecting generic Tier 1 defaults.</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-brand-accent mr-3">✔</span>
+                                <div>
+                                    <strong class="block text-brand-light">Leakage Monitoring</strong>
+                                    <span class="text-sm text-slate-300">Continuous satellite ingestion tracks adjacent areas to ensure deforestation/degradation hasn't just moved outside the project zone.</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <ul class="space-y-4">
+                            <li class="flex items-start">
+                                <span class="text-brand-accent mr-3">✔</span>
+                                <div>
+                                    <strong class="block text-brand-light">Uncertainty Deductions</strong>
+                                    <span class="text-sm text-slate-300">Algorithms must output confidence intervals. Verra requires deductions in issued credits if uncertainty exceeds thresholds. BCP tracks this metric.</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-brand-accent mr-3">✔</span>
+                                <div>
+                                    <strong class="block text-brand-light">Permanence & Reversal Risk</strong>
+                                    <span class="text-sm text-slate-300">IoT sensors (tide gauges, water temps) monitor for sea-level rise and marine heatwaves, continuously updating risk profiles.</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-8 bg-slate-800 p-4 rounded text-sm text-slate-300 border border-slate-700 text-center">
+                    <strong>Final Output:</strong> BCP outputs cryptographically secure, time-stamped reports detailing net greenhouse gas (GHG) emission reductions, ready for VVB audit and subsequent carbon credit issuance on the registry.
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
+            Interactive Technical Architecture Report &bull; Based on Research by Bluemvmt, Inc.
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- 1. Chart.js Configurations ---
+
+        // Chart 1: Carbon Density Comparison
+        const ctxDensity = document.getElementById('carbonDensityChart').getContext('2d');
+        new Chart(ctxDensity, {
+            type: 'bar',
+            data: {
+                labels: ['Tropical Forests', 'Seagrass Meadows', 'Mangroves'],
+                datasets: [
+                    {
+                        label: 'Living Biomass (Above/Below Ground)',
+                        data: [120, 10, 80],
+                        backgroundColor: '#0ea5e9', // sky-500
+                    },
+                    {
+                        label: 'Soil Organic Carbon (1m depth)',
+                        data: [100, 140, 360],
+                        backgroundColor: '#0f172a', // slate-900
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true },
+                    y: { 
+                        stacked: true,
+                        title: { display: true, text: 'Mg C / Hectare' }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: { mode: 'index', intersect: false }
+                }
+            }
+        });
+
+        // Chart 2: Uncertainty Reduction (Doughnut)
+        const ctxUncertainty = document.getElementById('uncertaintyChart').getContext('2d');
+        new Chart(ctxUncertainty, {
+            type: 'doughnut',
+            data: {
+                labels: ['Reported Carbon (Creditable)', 'Uncertainty Deduction (Tier 1)', 'Reclaimed Credits (Tier 3 ML)'],
+                datasets: [{
+                    data: [60, 25, 15],
+                    backgroundColor: ['#0d9488', '#94a3b8', '#38bdf8'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: {size: 10} } }
+                }
+            }
+        });
+
+
+        // --- 2. Interactive Pipeline Logic (BCP Workflows) ---
+        const pipelineContent = {
+            'ingest': {
+                title: "1. Data Ingestion (Data Cards & APIs)",
+                content: "In BCP, data formats are predefined using <strong>Data Cards</strong>. <br><br>For The Bahamas, IoT sensor telemetry (salinity, pH) flows via MQTT. Satellite data (Sentinel-2 GeoTIFFs) are fetched via REST APIs from ESA/Google Earth Engine. Manual soil core CSVs are uploaded directly. All data is standardized upon entry."
+            },
+            'sidecar': {
+                title: "2. Custom K8s Sidecars (AI/ML Execution)",
+                content: "Raw data enters the core platform, but heavy computation is pushed to <strong>Kubernetes Sidecars</strong>. <br><br>For example, running a U-Net model on gigabytes of satellite imagery to detect mangrove canopy changes occurs in an auto-scaling GPU sidecar, preventing platform lag."
+            },
+            'playbook': {
+                title: "3. Playbooks & Workflows",
+                content: "<strong>Playbooks</strong> automate the process. <br><br>A Blue Carbon Playbook triggers on the 1st of the month: It gathers the past month's sensor data, triggers the sidecar to run the ML model on new satellite imagery, calculates the net carbon flux, and applies Tier 3 emission factors."
+            },
+            'cert': {
+                title: "4. Certification Artifact Generation",
+                content: "The output of the Playbook is a formatted, version-controlled report containing the baselines, project emission reductions, and leakage calculations required by <strong>Verra VM0033</strong>, ready for independent VVB audit."
+            }
+        };
+
+        function updatePipeline(stepKey, element) {
+            // Update UI styling
+            document.querySelectorAll('.pipeline-step').forEach(el => {
+                el.classList.remove('active-step', 'border-brand-primary');
+                el.classList.add('border-slate-200');
+            });
+            element.classList.remove('border-slate-200');
+            element.classList.add('active-step', 'border-brand-primary');
+
+            // Update content
+            const detailContainer = document.getElementById('pipeline-details');
+            const data = pipelineContent[stepKey];
+            detailContainer.innerHTML = `
+                <h4 class="text-xl font-bold text-brand-primary mb-3">${data.title}</h4>
+                <p class="text-slate-700 leading-relaxed">${data.content}</p>
+            `;
+        }
+
+        // Initialize pipeline
+        document.addEventListener('DOMContentLoaded', () => {
+            updatePipeline('ingest', document.getElementById('step-ingest'));
+            updateModelDetails('spatial'); // Init ML section
+        });
+
+
+        // --- 3. ML Models & Algorithms Logic ---
+        const modelContent = {
+            'spatial': {
+                title: "Spatial Extent & Land Cover Classification",
+                purpose: "Identify exact acreage of mangroves and seagrass beds, and track changes (deforestation/growth) over time.",
+                algorithms: ["U-Net (Convolutional Neural Network)", "Mask R-CNN", "Random Forest (Pixel-based classification)"],
+                input: "Multispectral Satellite (Sentinel-2), SAR (Sentinel-1)",
+                details: "To certify credits, you must prove the area exists and isn't shrinking. Semantic segmentation models (like U-Net) classify pixels as 'Mangrove', 'Seagrass', 'Water', or 'Urban'.",
+                availability: "Pre-trained models like Meta's 'Segment Anything' or specific land-cover models are open-source. However, for Tier 3 accuracy, they MUST be fine-tuned via BCP sidecars using local Bahamian training data."
+            },
+            'biomass': {
+                title: "Biomass & Carbon Estimation",
+                purpose: "Correlate visual/radar satellite data with actual carbon tonnage in the soil and trees.",
+                algorithms: ["XGBoost", "Support Vector Regression (SVR)", "Deep Neural Networks (DNN)"],
+                input: "SAR backscatter data, LiDAR canopy heights, mapped to Ground-truth Soil Cores.",
+                details: "This is the hardest part. You cannot 'see' soil carbon from space. ML algorithms use structural data (canopy height, radar density) as proxies, training a regression model against the manual soil samples taken by scientists.",
+                availability: "Standard algorithms (XGBoost, Scikit-learn) are free/open-source. The value (and cost) is in the proprietary ground-truth data collected in The Bahamas to train them."
+            },
+            'anomaly': {
+                title: "Sensor Anomaly Detection & Flux Modeling",
+                purpose: "Ensure IoT data integrity and predict carbon fluxes between manual sampling events.",
+                algorithms: ["LSTM (Long Short-Term Memory networks)", "Isolation Forests", "ARIMA"],
+                input: "Continuous telemetry (salinity, pH, water level, eddy covariance).",
+                details: "Sensors foul in marine environments. Isolation Forests detect anomalies (e.g., barnacles on a sensor) and flag data for review so corrupted data doesn't invalidate a carbon claim. LSTMs predict time-series trends.",
+                availability: "Standard open-source libraries. Easily deployable within BCP standard architecture without heavy GPU sidecars."
+            },
+            'garden': {
+                title: "Google Model Garden & Third-Party APIs",
+                purpose: "Leveraging existing foundational models instead of building from scratch.",
+                algorithms: ["Google Dynamic World", "Vertex AI pre-trained Vision models", "Earth Engine APIs"],
+                input: "Coordinates and Time-ranges.",
+                details: "Google Earth Engine (GEE) and Google Model Garden offer incredible baselines. 'Dynamic World' provides near real-time land cover. We can integrate BCP with GCP via APIs.",
+                availability: "<strong>Licensing:</strong> Many GEE datasets and base Vertex AI models have a pay-per-compute/API call fee. Commercial use for carbon crediting usually requires a paid GCP enterprise agreement. However, the foundational models themselves (if open weights) are free; you pay for the inference compute."
+            }
+        };
+
+        function updateModelDetails(key) {
+            // Update button styles
+            const buttons = ['spatial', 'biomass', 'anomaly', 'garden'];
+            buttons.forEach(b => {
+                const btn = document.getElementById(`btn-${b}`);
+                if(b === key) {
+                    btn.classList.add('bg-sky-50', 'border-l-brand-primary');
+                    btn.classList.remove('border-l-transparent');
+                } else {
+                    btn.classList.remove('bg-sky-50', 'border-l-brand-primary');
+                    btn.classList.add('border-l-transparent');
+                }
+            });
+
+            // Update content
+            const container = document.getElementById('model-details-content');
+            const data = modelContent[key];
+            
+            container.innerHTML = `
+                <h3 class="text-2xl font-bold text-brand-dark mb-4">${data.title}</h3>
+                
+                <div class="mb-6">
+                    <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Purpose</h4>
+                    <p class="text-slate-800 bg-slate-50 p-3 rounded border border-slate-100">${data.purpose}</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Algorithms Needed</h4>
+                        <ul class="list-disc pl-5 text-slate-700 space-y-1">
+                            ${data.algorithms.map(a => `<li>${a}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Data Inputs</h4>
+                        <p class="text-slate-700 text-sm bg-brand-light p-2 rounded text-brand-dark font-medium">${data.input}</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Context for Certification</h4>
+                        <p class="text-slate-700 text-sm">${data.details}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Availability & Licensing (e.g. Google)</h4>
+                        <p class="text-slate-700 text-sm border-l-4 border-amber-400 pl-3 py-1 bg-amber-50">${data.availability}</p>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
