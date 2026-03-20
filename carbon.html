@@ -75,9 +75,52 @@
             border-color: #0369a1;
             background-color: #e0f2fe;
         }
+
+        #preview-gate {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: linear-gradient(145deg, #0f172a 0%, #0c4a6e 100%);
+        }
+        html.bc-preview-unlocked #preview-gate {
+            display: none !important;
+        }
     </style>
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('bc_preview_ok') === '1') {
+                    document.documentElement.classList.add('bc-preview-unlocked');
+                }
+            } catch (e) {}
+        })();
+    </script>
 </head>
 <body class="bg-brand-bg text-slate-800 font-sans antialiased">
+
+    <div id="preview-gate" role="dialog" aria-modal="true" aria-labelledby="preview-gate-title">
+        <div class="w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl border border-slate-200">
+            <h1 id="preview-gate-title" class="text-lg font-bold text-brand-dark mb-1">Preview access</h1>
+            <p class="text-sm text-slate-600 mb-6">Enter the password to view this page.</p>
+            <form id="preview-gate-form" class="space-y-4">
+                <div>
+                    <label for="preview-password-input" class="sr-only">Password</label>
+                    <input type="password" id="preview-password-input" name="password" autocomplete="current-password"
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 shadow-sm focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-sky-200"
+                        placeholder="Password" required autofocus>
+                </div>
+                <p id="preview-gate-error" class="hidden text-sm text-red-600" role="alert">Incorrect password.</p>
+                <button type="submit"
+                    class="w-full rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-sky-800 focus:outline-none focus:ring-2 focus:ring-sky-300">
+                    Continue
+                </button>
+            </form>
+        </div>
+    </div>
 
     <!-- Application Structure Plan: 
          1. Header/Hero: Establishes context (Bahamas, BCP, Certification).
@@ -613,6 +656,43 @@
                 </div>
             `;
         }
+    </script>
+    <script>
+        (function () {
+            var PASS = 'BlueCarbon#2026';
+            var STORAGE = 'bc_preview_ok';
+            var input = document.getElementById('preview-password-input');
+            var form = document.getElementById('preview-gate-form');
+            var err = document.getElementById('preview-gate-error');
+
+            if (document.documentElement.classList.contains('bc-preview-unlocked')) {
+                return;
+            }
+
+            function showError() {
+                if (err) err.classList.remove('hidden');
+            }
+
+            function unlock() {
+                try {
+                    localStorage.setItem(STORAGE, '1');
+                } catch (e) {}
+                document.documentElement.classList.add('bc-preview-unlocked');
+            }
+
+            if (form && input) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    if (input.value === PASS) {
+                        unlock();
+                    } else {
+                        showError();
+                        input.value = '';
+                        input.focus();
+                    }
+                });
+            }
+        })();
     </script>
 </body>
 </html>
